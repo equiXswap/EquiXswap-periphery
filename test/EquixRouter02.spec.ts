@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai'
-import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
+import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { Contract } from 'ethers'
 import { bigNumberify } from 'ethers/utils'
 import { MaxUint256 } from 'ethers/constants'
@@ -31,11 +31,11 @@ describe('EquixRouter', () => {
     router = fixture.router02
   })
 
-
   it('getAmountsOut', async () => {
     await token0.approve(router.address, MaxUint256)
     await token1.approve(router.address, MaxUint256)
-    console.log(      token0.address,
+    console.log(
+      token0.address,
       token1.address,
       bigNumberify(10000),
       bigNumberify(10000),
@@ -43,7 +43,8 @@ describe('EquixRouter', () => {
       0,
       wallet.address,
       MaxUint256,
-      overrides)
+      overrides
+    )
     await router.addLiquidity(
       token0.address,
       token1.address,
@@ -62,7 +63,4 @@ describe('EquixRouter', () => {
     const path = [token0.address, token1.address]
     expect(await router.getAmountsOut(bigNumberify(2), path)).to.deep.eq([bigNumberify(2), bigNumberify(1)])
   })
-
 })
-
-
