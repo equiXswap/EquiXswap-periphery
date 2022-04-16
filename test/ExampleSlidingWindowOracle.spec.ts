@@ -29,7 +29,7 @@ describe('ExampleSlidingWindowOracle', () => {
   let token0: Contract
   let token1: Contract
   let pair: Contract
-  let weth: Contract
+  let wnd2: Contract
   let factory: Contract
 
   async function addLiquidity(amount0: BigNumber = defaultToken0Amount, amount1: BigNumber = defaultToken1Amount) {
@@ -61,14 +61,14 @@ describe('ExampleSlidingWindowOracle', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
-    weth = fixture.WETH
+    wnd2 = fixture.WND2
     factory = fixture.factoryV2
   })
 
   // 1/1/2020 @ 12:00 am UTC
   // cannot be 0 because that instructs ganache to set it to current timestamp
   // cannot be 86400 because then timestamp 0 is a valid historical observation
-  const startTime = 1577836800
+  const startTime = 1577836801
 
   // must come before adding liquidity to pairs for correct cumulative price computations
   // cannot use 0 because that resets to current timestamp
@@ -180,7 +180,7 @@ describe('ExampleSlidingWindowOracle', () => {
     })
 
     it('fails for invalid pair', async () => {
-      await expect(slidingWindowOracle.update(weth.address, token1.address)).to.be.reverted
+      await expect(slidingWindowOracle.update(wnd2.address, token1.address)).to.be.reverted
     })
   })
 
@@ -203,7 +203,7 @@ describe('ExampleSlidingWindowOracle', () => {
     })
 
     it('fails for invalid pair', async () => {
-      await expect(slidingWindowOracle.consult(weth.address, 0, token1.address)).to.be.reverted
+      await expect(slidingWindowOracle.consult(wnd2.address, 0, token1.address)).to.be.reverted
     })
 
     describe('happy path', () => {

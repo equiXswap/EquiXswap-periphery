@@ -13,7 +13,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Migrator', () => {
+describe('EquixMigrator', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -22,49 +22,49 @@ describe('UniswapV2Migrator', () => {
   const [wallet] = provider.getWallets()
   const loadFixture = createFixtureLoader(provider, [wallet])
 
-  let WETHPartner: Contract
-  let WETHPair: Contract
+  let WND2Partner: Contract
+  let WND2Pair: Contract
   let router: Contract
   let migrator: Contract
-  let WETHExchangeV1: Contract
+  let WND2ExchangeV1: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
-    WETHPartner = fixture.WETHPartner
-    WETHPair = fixture.WETHPair
+    WND2Partner = fixture.WND2Partner
+    WND2Pair = fixture.WND2Pair
     router = fixture.router01 // we used router01 for this contract
     migrator = fixture.migrator
-    WETHExchangeV1 = fixture.WETHExchangeV1
+    WND2ExchangeV1 = fixture.WND2ExchangeV1
   })
 
   it('migrate', async () => {
-    const WETHPartnerAmount = expandTo18Decimals(1)
+    const WND2PartnerAmount = expandTo18Decimals(1)
     const ETHAmount = expandTo18Decimals(4)
-    await WETHPartner.approve(WETHExchangeV1.address, MaxUint256)
-    await WETHExchangeV1.addLiquidity(bigNumberify(1), WETHPartnerAmount, MaxUint256, {
+    await WND2Partner.approve(WND2ExchangeV1.address, MaxUint256)
+    await WND2ExchangeV1.addLiquidity(bigNumberify(1), WND2PartnerAmount, MaxUint256, {
       ...overrides,
       value: ETHAmount
     })
-    await WETHExchangeV1.approve(migrator.address, MaxUint256)
+    await WND2ExchangeV1.approve(migrator.address, MaxUint256)
     const expectedLiquidity = expandTo18Decimals(2)
-    const WETHPairToken0 = await WETHPair.token0()
+    const WND2PairToken0 = await WND2Pair.token0()
     await expect(
-      migrator.migrate(WETHPartner.address, WETHPartnerAmount, ETHAmount, wallet.address, MaxUint256, overrides)
+      migrator.migrate(WND2Partner.address, WND2PartnerAmount, ETHAmount, wallet.address, MaxUint256, overrides)
     )
-      .to.emit(WETHPair, 'Transfer')
+      .to.emit(WND2Pair, 'Transfer')
       .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-      .to.emit(WETHPair, 'Transfer')
+      .to.emit(WND2Pair, 'Transfer')
       .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-      .to.emit(WETHPair, 'Sync')
+      .to.emit(WND2Pair, 'Sync')
       .withArgs(
-        WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
-        WETHPairToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
+        WND2PairToken0 === WND2Partner.address ? WND2PartnerAmount : ETHAmount,
+        WND2PairToken0 === WND2Partner.address ? ETHAmount : WND2PartnerAmount
       )
-      .to.emit(WETHPair, 'Mint')
+      .to.emit(WND2Pair, 'Mint')
       .withArgs(
         router.address,
-        WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
-        WETHPairToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
+        WND2PairToken0 === WND2Partner.address ? WND2PartnerAmount : ETHAmount,
+        WND2PairToken0 === WND2Partner.address ? ETHAmount : WND2PartnerAmount
       )
-    expect(await WETHPair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+    expect(await WND2Pair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
   })
 })
