@@ -7,24 +7,24 @@ import '../interfaces/V1/IUniswapV1Factory.sol';
 import '../interfaces/V1/IUniswapV1Exchange.sol';
 import '../interfaces/IEquixRouter01.sol';
 import '../interfaces/IERC20.sol';
-import '../interfaces/IWND2.sol';
+import '../interfaces/IWETH.sol';
 
 contract ExampleFlashSwap is IEquixCallee {
     IUniswapV1Factory immutable factoryV1;
     address immutable factory;
-    IWND2 immutable WND2;
+    IWETH immutable WETH;
 
     constructor(address _factory, address _factoryV1, address router) public {
         factoryV1 = IUniswapV1Factory(_factoryV1);
         factory = _factory;
-        WND2 = IWND2(IEquixRouter01(router).WND2());
+        WETH = IWETH(IEquixRouter01(router).WETH());
     }
 
-    // needs to accept ETH from any V1 exchange and WND2. ideally this could be enforced, as in the router,
+    // needs to accept ETH from any V1 exchange and WETH. ideally this could be enforced, as in the router,
     // but it's not possible because it requires a call to the v1 factory, which takes too much gas
     receive() external payable {}
 
-    // gets tokens/WND2 via a V2 flash swap, swaps for the ETH/tokens on V1, repays V2, and keeps the rest!
+    // gets tokens/WETH via a V2 flash swap, swaps for the ETH/tokens on V1, repays V2, and keeps the rest!
     function equixCall(address sender, uint amount0, uint amount1, bytes calldata data) external override {
         address[] memory path = new address[](2);
         uint amountToken;
@@ -36,12 +36,12 @@ contract ExampleFlashSwap is IEquixCallee {
         assert(amount0 == 0 || amount1 == 0); // this strategy is unidirectional
         path[0] = amount0 == 0 ? token0 : token1;
         path[1] = amount0 == 0 ? token1 : token0;
-        amountToken = token0 == address(WND2) ? amount1 : amount0;
-        amountETH = token0 == address(WND2) ? amount0 : amount1;
+        amountToken = token0 == address(WETH) ? amount1 : amount0;
+        amountETH = token0 == address(WETH) ? amount0 : amount1;
         }
 
-        assert(path[0] == address(WND2) || path[1] == address(WND2)); // this strategy only works with a V2 WND2 pair
-        IERC20 token = IERC20(path[0] == address(WND2) ? path[1] : path[0]);
+        assert(path[0] == address(WETH) || path[1] == address(WETH)); // this strategy only works with a V2 WETH pair
+        IERC20 token = IERC20(path[0] == address(WETH) ? path[1] : path[0]);
         IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(address(token))); // get V1 exchange
 
         if (amountToken > 0) {
@@ -50,13 +50,13 @@ contract ExampleFlashSwap is IEquixCallee {
             uint amountReceived = exchangeV1.tokenToEthSwapInput(amountToken, minETH, uint(-1));
             uint amountRequired = EquixLibrary.getAmountsIn(factory, amountToken, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough ETH back to repay our flash loan
-            WND2.deposit{value: amountRequired}();
-            assert(WND2.transfer(msg.sender, amountRequired)); // return WND2 to V2 pair
+            WETH.deposit{value: amountRequired}();
+            assert(WETH.transfer(msg.sender, amountRequired)); // return WETH to V2 pair
             (bool success,) = sender.call{value: amountReceived - amountRequired}(new bytes(0)); // keep the rest! (ETH)
             assert(success);
         } else {
             (uint minTokens) = abi.decode(data, (uint)); // slippage parameter for V1, passed in by caller
-            WND2.withdraw(amountETH);
+            WETH.withdraw(amountETH);
             uint amountReceived = exchangeV1.ethToTokenSwapInput{value: amountETH}(minTokens, uint(-1));
             uint amountRequired = EquixLibrary.getAmountsIn(factory, amountETH, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough tokens back to repay our flash loan

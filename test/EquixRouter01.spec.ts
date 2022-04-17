@@ -31,26 +31,26 @@ describe('EquixRouter{01,02}', () => {
 
     let token0: Contract
     let token1: Contract
-    let WND2: Contract
-    let WND2Partner: Contract
+    let WETH: Contract
+    let WETHPartner: Contract
     let factory: Contract
     let router: Contract
     let pair: Contract
-    let WND2Pair: Contract
+    let WETHPair: Contract
     let routerEventEmitter: Contract
     beforeEach(async function() {
       const fixture = await loadFixture(v2Fixture)
       token0 = fixture.token0
       token1 = fixture.token1
-      WND2 = fixture.WND2
-      WND2Partner = fixture.WND2Partner
+      WETH = fixture.WETH
+      WETHPartner = fixture.WETHPartner
       factory = fixture.factoryV2
       router = {
         [RouterVersion.EquixRouter01]: fixture.router01,
         [RouterVersion.EquixRouter02]: fixture.router02
       }[routerVersion as RouterVersion]
       pair = fixture.pair
-      WND2Pair = fixture.WND2Pair
+      WETHPair = fixture.WETHPair
       routerEventEmitter = fixture.routerEventEmitter
     })
 
@@ -59,9 +59,9 @@ describe('EquixRouter{01,02}', () => {
     })
 
     describe(routerVersion, () => {
-      it('factory, WND2', async () => {
+      it('factory, WETH', async () => {
         expect(await router.factory()).to.eq(factory.address)
-        expect(await router.WND2()).to.eq(WND2.address)
+        expect(await router.WETH()).to.eq(WETH.address)
       })
 
       it('addLiquidity', async () => {
@@ -101,40 +101,40 @@ describe('EquixRouter{01,02}', () => {
       })
 
       it('addLiquidityETH', async () => {
-        const WND2PartnerAmount = expandTo18Decimals(1)
+        const WETHPartnerAmount = expandTo18Decimals(1)
         const ETHAmount = expandTo18Decimals(4)
 
         const expectedLiquidity = expandTo18Decimals(2)
-        const WND2PairToken0 = await WND2Pair.token0()
-        await WND2Partner.approve(router.address, MaxUint256)
+        const WETHPairToken0 = await WETHPair.token0()
+        await WETHPartner.approve(router.address, MaxUint256)
         await expect(
           router.addLiquidityETH(
-            WND2Partner.address,
-            WND2PartnerAmount,
-            WND2PartnerAmount,
+            WETHPartner.address,
+            WETHPartnerAmount,
+            WETHPartnerAmount,
             ETHAmount,
             wallet.address,
             MaxUint256,
             { ...overrides, value: ETHAmount }
           )
         )
-          .to.emit(WND2Pair, 'Transfer')
+          .to.emit(WETHPair, 'Transfer')
           .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-          .to.emit(WND2Pair, 'Transfer')
+          .to.emit(WETHPair, 'Transfer')
           .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-          .to.emit(WND2Pair, 'Sync')
+          .to.emit(WETHPair, 'Sync')
           .withArgs(
-            WND2PairToken0 === WND2Partner.address ? WND2PartnerAmount : ETHAmount,
-            WND2PairToken0 === WND2Partner.address ? ETHAmount : WND2PartnerAmount
+            WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
+            WETHPairToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
           )
-          .to.emit(WND2Pair, 'Mint')
+          .to.emit(WETHPair, 'Mint')
           .withArgs(
             router.address,
-            WND2PairToken0 === WND2Partner.address ? WND2PartnerAmount : ETHAmount,
-            WND2PairToken0 === WND2Partner.address ? ETHAmount : WND2PartnerAmount
+            WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
+            WETHPairToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
           )
 
-        expect(await WND2Pair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+        expect(await WETHPair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       })
 
       async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
@@ -182,19 +182,19 @@ describe('EquixRouter{01,02}', () => {
       })
 
       it('removeLiquidityETH', async () => {
-        const WND2PartnerAmount = expandTo18Decimals(1)
+        const WETHPartnerAmount = expandTo18Decimals(1)
         const ETHAmount = expandTo18Decimals(4)
-        await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-        await WND2.deposit({ value: ETHAmount })
-        await WND2.transfer(WND2Pair.address, ETHAmount)
-        await WND2Pair.mint(wallet.address, overrides)
+        await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+        await WETH.deposit({ value: ETHAmount })
+        await WETH.transfer(WETHPair.address, ETHAmount)
+        await WETHPair.mint(wallet.address, overrides)
 
         const expectedLiquidity = expandTo18Decimals(2)
-        const WND2PairToken0 = await WND2Pair.token0()
-        await WND2Pair.approve(router.address, MaxUint256)
+        const WETHPairToken0 = await WETHPair.token0()
+        await WETHPair.approve(router.address, MaxUint256)
         await expect(
           router.removeLiquidityETH(
-            WND2Partner.address,
+            WETHPartner.address,
             expectedLiquidity.sub(MINIMUM_LIQUIDITY),
             0,
             0,
@@ -203,34 +203,34 @@ describe('EquixRouter{01,02}', () => {
             overrides
           )
         )
-          .to.emit(WND2Pair, 'Transfer')
-          .withArgs(wallet.address, WND2Pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-          .to.emit(WND2Pair, 'Transfer')
-          .withArgs(WND2Pair.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-          .to.emit(WND2, 'Transfer')
-          .withArgs(WND2Pair.address, router.address, ETHAmount.sub(2000))
-          .to.emit(WND2Partner, 'Transfer')
-          .withArgs(WND2Pair.address, router.address, WND2PartnerAmount.sub(500))
-          .to.emit(WND2Partner, 'Transfer')
-          .withArgs(router.address, wallet.address, WND2PartnerAmount.sub(500))
-          .to.emit(WND2Pair, 'Sync')
+          .to.emit(WETHPair, 'Transfer')
+          .withArgs(wallet.address, WETHPair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+          .to.emit(WETHPair, 'Transfer')
+          .withArgs(WETHPair.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+          .to.emit(WETH, 'Transfer')
+          .withArgs(WETHPair.address, router.address, ETHAmount.sub(2000))
+          .to.emit(WETHPartner, 'Transfer')
+          .withArgs(WETHPair.address, router.address, WETHPartnerAmount.sub(500))
+          .to.emit(WETHPartner, 'Transfer')
+          .withArgs(router.address, wallet.address, WETHPartnerAmount.sub(500))
+          .to.emit(WETHPair, 'Sync')
           .withArgs(
-            WND2PairToken0 === WND2Partner.address ? 500 : 2000,
-            WND2PairToken0 === WND2Partner.address ? 2000 : 500
+            WETHPairToken0 === WETHPartner.address ? 500 : 2000,
+            WETHPairToken0 === WETHPartner.address ? 2000 : 500
           )
-          .to.emit(WND2Pair, 'Burn')
+          .to.emit(WETHPair, 'Burn')
           .withArgs(
             router.address,
-            WND2PairToken0 === WND2Partner.address ? WND2PartnerAmount.sub(500) : ETHAmount.sub(2000),
-            WND2PairToken0 === WND2Partner.address ? ETHAmount.sub(2000) : WND2PartnerAmount.sub(500),
+            WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount.sub(500) : ETHAmount.sub(2000),
+            WETHPairToken0 === WETHPartner.address ? ETHAmount.sub(2000) : WETHPartnerAmount.sub(500),
             router.address
           )
 
-        expect(await WND2Pair.balanceOf(wallet.address)).to.eq(0)
-        const totalSupplyWND2Partner = await WND2Partner.totalSupply()
-        const totalSupplyWND2 = await WND2.totalSupply()
-        expect(await WND2Partner.balanceOf(wallet.address)).to.eq(totalSupplyWND2Partner.sub(500))
-        expect(await WND2.balanceOf(wallet.address)).to.eq(totalSupplyWND2.sub(2000))
+        expect(await WETHPair.balanceOf(wallet.address)).to.eq(0)
+        const totalSupplyWETHPartner = await WETHPartner.totalSupply()
+        const totalSupplyWETH = await WETH.totalSupply()
+        expect(await WETHPartner.balanceOf(wallet.address)).to.eq(totalSupplyWETHPartner.sub(500))
+        expect(await WETH.balanceOf(wallet.address)).to.eq(totalSupplyWETH.sub(2000))
       })
 
       it('removeLiquidityWithPermit', async () => {
@@ -267,18 +267,18 @@ describe('EquixRouter{01,02}', () => {
       })
 
       it('removeLiquidityETHWithPermit', async () => {
-        const WND2PartnerAmount = expandTo18Decimals(1)
+        const WETHPartnerAmount = expandTo18Decimals(1)
         const ETHAmount = expandTo18Decimals(4)
-        await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-        await WND2.deposit({ value: ETHAmount })
-        await WND2.transfer(WND2Pair.address, ETHAmount)
-        await WND2Pair.mint(wallet.address, overrides)
+        await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+        await WETH.deposit({ value: ETHAmount })
+        await WETH.transfer(WETHPair.address, ETHAmount)
+        await WETHPair.mint(wallet.address, overrides)
 
         const expectedLiquidity = expandTo18Decimals(2)
 
-        const nonce = await WND2Pair.nonces(wallet.address)
+        const nonce = await WETHPair.nonces(wallet.address)
         const digest = await getApprovalDigest(
-          WND2Pair,
+          WETHPair,
           { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
           nonce,
           MaxUint256
@@ -287,7 +287,7 @@ describe('EquixRouter{01,02}', () => {
         const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
 
         await router.removeLiquidityETHWithPermit(
-          WND2Partner.address,
+          WETHPartner.address,
           expectedLiquidity.sub(MINIMUM_LIQUIDITY),
           0,
           0,
@@ -426,48 +426,48 @@ describe('EquixRouter{01,02}', () => {
       })
 
       describe('swapExactETHForTokens', () => {
-        const WND2PartnerAmount = expandTo18Decimals(10)
+        const WETHPartnerAmount = expandTo18Decimals(10)
         const ETHAmount = expandTo18Decimals(5)
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = bigNumberify('1662497915624478906')
 
         beforeEach(async () => {
-          await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-          await WND2.deposit({ value: ETHAmount })
-          await WND2.transfer(WND2Pair.address, ETHAmount)
-          await WND2Pair.mint(wallet.address, overrides)
+          await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+          await WETH.deposit({ value: ETHAmount })
+          await WETH.transfer(WETHPair.address, ETHAmount)
+          await WETHPair.mint(wallet.address, overrides)
 
           await token0.approve(router.address, MaxUint256)
         })
 
         it('happy path', async () => {
-          const WND2PairToken0 = await WND2Pair.token0()
+          const WETHPairToken0 = await WETHPair.token0()
           await expect(
-            router.swapExactETHForTokens(0, [WND2.address, WND2Partner.address], wallet.address, MaxUint256, {
+            router.swapExactETHForTokens(0, [WETH.address, WETHPartner.address], wallet.address, MaxUint256, {
               ...overrides,
               value: swapAmount
             })
           )
-            .to.emit(WND2, 'Transfer')
-            .withArgs(router.address, WND2Pair.address, swapAmount)
-            .to.emit(WND2Partner, 'Transfer')
-            .withArgs(WND2Pair.address, wallet.address, expectedOutputAmount)
-            .to.emit(WND2Pair, 'Sync')
+            .to.emit(WETH, 'Transfer')
+            .withArgs(router.address, WETHPair.address, swapAmount)
+            .to.emit(WETHPartner, 'Transfer')
+            .withArgs(WETHPair.address, wallet.address, expectedOutputAmount)
+            .to.emit(WETHPair, 'Sync')
             .withArgs(
-              WND2PairToken0 === WND2Partner.address
-                ? WND2PartnerAmount.sub(expectedOutputAmount)
+              WETHPairToken0 === WETHPartner.address
+                ? WETHPartnerAmount.sub(expectedOutputAmount)
                 : ETHAmount.add(swapAmount),
-              WND2PairToken0 === WND2Partner.address
+              WETHPairToken0 === WETHPartner.address
                 ? ETHAmount.add(swapAmount)
-                : WND2PartnerAmount.sub(expectedOutputAmount)
+                : WETHPartnerAmount.sub(expectedOutputAmount)
             )
-            .to.emit(WND2Pair, 'Swap')
+            .to.emit(WETHPair, 'Swap')
             .withArgs(
               router.address,
-              WND2PairToken0 === WND2Partner.address ? 0 : swapAmount,
-              WND2PairToken0 === WND2Partner.address ? swapAmount : 0,
-              WND2PairToken0 === WND2Partner.address ? expectedOutputAmount : 0,
-              WND2PairToken0 === WND2Partner.address ? 0 : expectedOutputAmount,
+              WETHPairToken0 === WETHPartner.address ? 0 : swapAmount,
+              WETHPairToken0 === WETHPartner.address ? swapAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? expectedOutputAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? 0 : expectedOutputAmount,
               wallet.address
             )
         })
@@ -477,7 +477,7 @@ describe('EquixRouter{01,02}', () => {
             routerEventEmitter.swapExactETHForTokens(
               router.address,
               0,
-              [WND2.address, WND2Partner.address],
+              [WETH.address, WETHPartner.address],
               wallet.address,
               MaxUint256,
               {
@@ -491,12 +491,12 @@ describe('EquixRouter{01,02}', () => {
         })
 
         it('gas', async () => {
-          const WND2PartnerAmount = expandTo18Decimals(10)
+          const WETHPartnerAmount = expandTo18Decimals(10)
           const ETHAmount = expandTo18Decimals(5)
-          await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-          await WND2.deposit({ value: ETHAmount })
-          await WND2.transfer(WND2Pair.address, ETHAmount)
-          await WND2Pair.mint(wallet.address, overrides)
+          await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+          await WETH.deposit({ value: ETHAmount })
+          await WETH.transfer(WETHPair.address, ETHAmount)
+          await WETHPair.mint(wallet.address, overrides)
 
           // ensure that setting price{0,1}CumulativeLast for the first time doesn't affect our gas math
           await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
@@ -506,7 +506,7 @@ describe('EquixRouter{01,02}', () => {
           await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
           const tx = await router.swapExactETHForTokens(
             0,
-            [WND2.address, WND2Partner.address],
+            [WETH.address, WETHPartner.address],
             wallet.address,
             MaxUint256,
             {
@@ -525,63 +525,63 @@ describe('EquixRouter{01,02}', () => {
       })
 
       describe('swapTokensForExactETH', () => {
-        const WND2PartnerAmount = expandTo18Decimals(5)
+        const WETHPartnerAmount = expandTo18Decimals(5)
         const ETHAmount = expandTo18Decimals(10)
         const expectedSwapAmount = bigNumberify('557227237267357629')
         const outputAmount = expandTo18Decimals(1)
 
         beforeEach(async () => {
-          await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-          await WND2.deposit({ value: ETHAmount })
-          await WND2.transfer(WND2Pair.address, ETHAmount)
-          await WND2Pair.mint(wallet.address, overrides)
+          await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+          await WETH.deposit({ value: ETHAmount })
+          await WETH.transfer(WETHPair.address, ETHAmount)
+          await WETHPair.mint(wallet.address, overrides)
         })
 
         it('happy path', async () => {
-          await WND2Partner.approve(router.address, MaxUint256)
-          const WND2PairToken0 = await WND2Pair.token0()
+          await WETHPartner.approve(router.address, MaxUint256)
+          const WETHPairToken0 = await WETHPair.token0()
           await expect(
             router.swapTokensForExactETH(
               outputAmount,
               MaxUint256,
-              [WND2Partner.address, WND2.address],
+              [WETHPartner.address, WETH.address],
               wallet.address,
               MaxUint256,
               overrides
             )
           )
-            .to.emit(WND2Partner, 'Transfer')
-            .withArgs(wallet.address, WND2Pair.address, expectedSwapAmount)
-            .to.emit(WND2, 'Transfer')
-            .withArgs(WND2Pair.address, router.address, outputAmount)
-            .to.emit(WND2Pair, 'Sync')
+            .to.emit(WETHPartner, 'Transfer')
+            .withArgs(wallet.address, WETHPair.address, expectedSwapAmount)
+            .to.emit(WETH, 'Transfer')
+            .withArgs(WETHPair.address, router.address, outputAmount)
+            .to.emit(WETHPair, 'Sync')
             .withArgs(
-              WND2PairToken0 === WND2Partner.address
-                ? WND2PartnerAmount.add(expectedSwapAmount)
+              WETHPairToken0 === WETHPartner.address
+                ? WETHPartnerAmount.add(expectedSwapAmount)
                 : ETHAmount.sub(outputAmount),
-              WND2PairToken0 === WND2Partner.address
+              WETHPairToken0 === WETHPartner.address
                 ? ETHAmount.sub(outputAmount)
-                : WND2PartnerAmount.add(expectedSwapAmount)
+                : WETHPartnerAmount.add(expectedSwapAmount)
             )
-            .to.emit(WND2Pair, 'Swap')
+            .to.emit(WETHPair, 'Swap')
             .withArgs(
               router.address,
-              WND2PairToken0 === WND2Partner.address ? expectedSwapAmount : 0,
-              WND2PairToken0 === WND2Partner.address ? 0 : expectedSwapAmount,
-              WND2PairToken0 === WND2Partner.address ? 0 : outputAmount,
-              WND2PairToken0 === WND2Partner.address ? outputAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? expectedSwapAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? 0 : expectedSwapAmount,
+              WETHPairToken0 === WETHPartner.address ? 0 : outputAmount,
+              WETHPairToken0 === WETHPartner.address ? outputAmount : 0,
               router.address
             )
         })
 
         it('amounts', async () => {
-          await WND2Partner.approve(routerEventEmitter.address, MaxUint256)
+          await WETHPartner.approve(routerEventEmitter.address, MaxUint256)
           await expect(
             routerEventEmitter.swapTokensForExactETH(
               router.address,
               outputAmount,
               MaxUint256,
-              [WND2Partner.address, WND2.address],
+              [WETHPartner.address, WETH.address],
               wallet.address,
               MaxUint256,
               overrides
@@ -593,63 +593,63 @@ describe('EquixRouter{01,02}', () => {
       })
 
       describe('swapExactTokensForETH', () => {
-        const WND2PartnerAmount = expandTo18Decimals(5)
+        const WETHPartnerAmount = expandTo18Decimals(5)
         const ETHAmount = expandTo18Decimals(10)
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = bigNumberify('1662497915624478906')
 
         beforeEach(async () => {
-          await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-          await WND2.deposit({ value: ETHAmount })
-          await WND2.transfer(WND2Pair.address, ETHAmount)
-          await WND2Pair.mint(wallet.address, overrides)
+          await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+          await WETH.deposit({ value: ETHAmount })
+          await WETH.transfer(WETHPair.address, ETHAmount)
+          await WETHPair.mint(wallet.address, overrides)
         })
 
         it('happy path', async () => {
-          await WND2Partner.approve(router.address, MaxUint256)
-          const WND2PairToken0 = await WND2Pair.token0()
+          await WETHPartner.approve(router.address, MaxUint256)
+          const WETHPairToken0 = await WETHPair.token0()
           await expect(
             router.swapExactTokensForETH(
               swapAmount,
               0,
-              [WND2Partner.address, WND2.address],
+              [WETHPartner.address, WETH.address],
               wallet.address,
               MaxUint256,
               overrides
             )
           )
-            .to.emit(WND2Partner, 'Transfer')
-            .withArgs(wallet.address, WND2Pair.address, swapAmount)
-            .to.emit(WND2, 'Transfer')
-            .withArgs(WND2Pair.address, router.address, expectedOutputAmount)
-            .to.emit(WND2Pair, 'Sync')
+            .to.emit(WETHPartner, 'Transfer')
+            .withArgs(wallet.address, WETHPair.address, swapAmount)
+            .to.emit(WETH, 'Transfer')
+            .withArgs(WETHPair.address, router.address, expectedOutputAmount)
+            .to.emit(WETHPair, 'Sync')
             .withArgs(
-              WND2PairToken0 === WND2Partner.address
-                ? WND2PartnerAmount.add(swapAmount)
+              WETHPairToken0 === WETHPartner.address
+                ? WETHPartnerAmount.add(swapAmount)
                 : ETHAmount.sub(expectedOutputAmount),
-              WND2PairToken0 === WND2Partner.address
+              WETHPairToken0 === WETHPartner.address
                 ? ETHAmount.sub(expectedOutputAmount)
-                : WND2PartnerAmount.add(swapAmount)
+                : WETHPartnerAmount.add(swapAmount)
             )
-            .to.emit(WND2Pair, 'Swap')
+            .to.emit(WETHPair, 'Swap')
             .withArgs(
               router.address,
-              WND2PairToken0 === WND2Partner.address ? swapAmount : 0,
-              WND2PairToken0 === WND2Partner.address ? 0 : swapAmount,
-              WND2PairToken0 === WND2Partner.address ? 0 : expectedOutputAmount,
-              WND2PairToken0 === WND2Partner.address ? expectedOutputAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? swapAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? 0 : swapAmount,
+              WETHPairToken0 === WETHPartner.address ? 0 : expectedOutputAmount,
+              WETHPairToken0 === WETHPartner.address ? expectedOutputAmount : 0,
               router.address
             )
         })
 
         it('amounts', async () => {
-          await WND2Partner.approve(routerEventEmitter.address, MaxUint256)
+          await WETHPartner.approve(routerEventEmitter.address, MaxUint256)
           await expect(
             routerEventEmitter.swapExactTokensForETH(
               router.address,
               swapAmount,
               0,
-              [WND2Partner.address, WND2.address],
+              [WETHPartner.address, WETH.address],
               wallet.address,
               MaxUint256,
               overrides
@@ -661,24 +661,24 @@ describe('EquixRouter{01,02}', () => {
       })
 
       describe('swapETHForExactTokens', () => {
-        const WND2PartnerAmount = expandTo18Decimals(10)
+        const WETHPartnerAmount = expandTo18Decimals(10)
         const ETHAmount = expandTo18Decimals(5)
         const expectedSwapAmount = bigNumberify('557227237267357629')
         const outputAmount = expandTo18Decimals(1)
 
         beforeEach(async () => {
-          await WND2Partner.transfer(WND2Pair.address, WND2PartnerAmount)
-          await WND2.deposit({ value: ETHAmount })
-          await WND2.transfer(WND2Pair.address, ETHAmount)
-          await WND2Pair.mint(wallet.address, overrides)
+          await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
+          await WETH.deposit({ value: ETHAmount })
+          await WETH.transfer(WETHPair.address, ETHAmount)
+          await WETHPair.mint(wallet.address, overrides)
         })
 
         it('happy path', async () => {
-          const WND2PairToken0 = await WND2Pair.token0()
+          const WETHPairToken0 = await WETHPair.token0()
           await expect(
             router.swapETHForExactTokens(
               outputAmount,
-              [WND2.address, WND2Partner.address],
+              [WETH.address, WETHPartner.address],
               wallet.address,
               MaxUint256,
               {
@@ -687,26 +687,26 @@ describe('EquixRouter{01,02}', () => {
               }
             )
           )
-            .to.emit(WND2, 'Transfer')
-            .withArgs(router.address, WND2Pair.address, expectedSwapAmount)
-            .to.emit(WND2Partner, 'Transfer')
-            .withArgs(WND2Pair.address, wallet.address, outputAmount)
-            .to.emit(WND2Pair, 'Sync')
+            .to.emit(WETH, 'Transfer')
+            .withArgs(router.address, WETHPair.address, expectedSwapAmount)
+            .to.emit(WETHPartner, 'Transfer')
+            .withArgs(WETHPair.address, wallet.address, outputAmount)
+            .to.emit(WETHPair, 'Sync')
             .withArgs(
-              WND2PairToken0 === WND2Partner.address
-                ? WND2PartnerAmount.sub(outputAmount)
+              WETHPairToken0 === WETHPartner.address
+                ? WETHPartnerAmount.sub(outputAmount)
                 : ETHAmount.add(expectedSwapAmount),
-              WND2PairToken0 === WND2Partner.address
+              WETHPairToken0 === WETHPartner.address
                 ? ETHAmount.add(expectedSwapAmount)
-                : WND2PartnerAmount.sub(outputAmount)
+                : WETHPartnerAmount.sub(outputAmount)
             )
-            .to.emit(WND2Pair, 'Swap')
+            .to.emit(WETHPair, 'Swap')
             .withArgs(
               router.address,
-              WND2PairToken0 === WND2Partner.address ? 0 : expectedSwapAmount,
-              WND2PairToken0 === WND2Partner.address ? expectedSwapAmount : 0,
-              WND2PairToken0 === WND2Partner.address ? outputAmount : 0,
-              WND2PairToken0 === WND2Partner.address ? 0 : outputAmount,
+              WETHPairToken0 === WETHPartner.address ? 0 : expectedSwapAmount,
+              WETHPairToken0 === WETHPartner.address ? expectedSwapAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? outputAmount : 0,
+              WETHPairToken0 === WETHPartner.address ? 0 : outputAmount,
               wallet.address
             )
         })
@@ -716,7 +716,7 @@ describe('EquixRouter{01,02}', () => {
             routerEventEmitter.swapETHForExactTokens(
               router.address,
               outputAmount,
-              [WND2.address, WND2Partner.address],
+              [WETH.address, WETHPartner.address],
               wallet.address,
               MaxUint256,
               {

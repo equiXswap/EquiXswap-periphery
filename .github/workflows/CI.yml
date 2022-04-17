@@ -10,7 +10,7 @@ jobs:
   test:
     strategy:
       matrix:
-        node: ['12.x']
+        node: ['10.x', '12.x']
         os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
@@ -31,7 +31,6 @@ jobs:
           key: ${{ matrix.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ matrix.os }}-yarn-
-
       - run: yarn
 
       - run: yarn lint

@@ -1,9 +1,9 @@
 {
-  "name": "equixswap-peripheral",
+  "name": "@equixswap/periphery",
   "version": "1.1.0-beta.0",
   "description": "🎚 Peripheral smart contracts for interacting with EquiXswap",
   "engines": {
-    "node": "12.x"
+    "node": ">=10"
   },
   "homepage": "https://equixswap.org",
   "repository": {
@@ -16,9 +16,7 @@
   ],
   "dependencies": {
     "@equixswap/lib": "^0.1.0-alpha",
-    "@equixswap/equixswap-core": "^0.1.0",
-    "@truffle/hdwallet-provider": "^1.7.0",
-    "truffle-plugin-verify": "^0.4.6"
+    "@equixswap/equixswap-core": "^0.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
