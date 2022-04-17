@@ -15,10 +15,10 @@
     "contracts"
   ],
   "dependencies": {
-    "@uniswap/lib": "1.1.1",
+    "@equixswap/lib": "^0.1.0-alpha",
     "@equixswap/equixswap-core": "^0.1.0",
-    "truffle-hdwallet-provider": "^1.0.17",
-    "truffle-plugin-verify": "^0.4.0"
+    "@truffle/hdwallet-provider": "^1.7.0",
+    "truffle-plugin-verify": "^0.4.6"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",

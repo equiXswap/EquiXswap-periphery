@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0;
 
 import '@equixswap/equixswap-core/contracts/interfaces/IEquixPair.sol';
-import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
+import '@equixswap/lib/contracts/libraries/FixedPoint.sol';
 
 // library with helper methods for oracles that are concerned with computing average prices
 library EquixOracleLibrary {

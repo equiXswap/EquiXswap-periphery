@@ -1,6 +1,6 @@
 # Equix Router
 
-### Bsc-Test
+### nd2-Test
 
 The following assumes the use of `node@12.x`.
 

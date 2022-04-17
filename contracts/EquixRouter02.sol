@@ -1,7 +1,7 @@
 pragma solidity =0.6.6;
 
 import '@equixswap/equixswap-core/contracts/interfaces/IEquixFactory.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import '@equixswap/lib/contracts/libraries/TransferHelper.sol';
 
 import './interfaces/IEquixRouter02.sol';
 import './libraries/EquixLibrary.sol';

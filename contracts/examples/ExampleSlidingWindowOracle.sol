@@ -2,7 +2,7 @@ pragma solidity =0.6.6;
 
 // import '@equixswap/equixswap-core/contracts/interfaces/IEquixFactory.sol';
 // import '@equixswap/equixswap-core/contracts/interfaces/IEquixPair.sol';
-import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
+import '@equixswap/lib/contracts/libraries/FixedPoint.sol';
 
 import '../libraries/SafeMath.sol';
 import '../libraries/EquixLibrary.sol';

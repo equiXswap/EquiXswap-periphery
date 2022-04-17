@@ -1,8 +1,8 @@
 pragma solidity =0.6.6;
 
 // import '@equixswap/equixswap-core/contracts/interfaces/IEquixPair.sol';
-import '@uniswap/lib/contracts/libraries/Babylonian.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import '@equixswap/lib/contracts/libraries/Babylonian.sol';
+import '@equixswap/lib/contracts/libraries/TransferHelper.sol';
 
 import '../interfaces/IERC20.sol';
 import '../interfaces/IEquixRouter01.sol';

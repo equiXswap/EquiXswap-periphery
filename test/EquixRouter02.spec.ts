@@ -12,7 +12,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('EquixRouter', () => {
+describe('EquixRouter02', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
